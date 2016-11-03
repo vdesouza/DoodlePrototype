@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:appNs="http://schemas.android.com/apk/res-auto">
+
+    <!-- Undo action -->
+    <item android:id="@+id/action_undo"
+          android:icon="@drawable/ic_undo"
+          android:title="@string/undo_icon_name"
+          appNs:showAsAction="ifRoom"/>
+
+    <!-- Redo action -->
+    <item android:id="@+id/action_redo"
+          android:icon="@drawable/ic_redo"
+          android:title="@string/redo_icon_name"
+          appNs:showAsAction="ifRoom"/>
+
+
+</menu>

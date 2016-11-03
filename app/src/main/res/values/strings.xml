@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Doodle Prototype</string>
+    <!-- Names for tools menu navigation -->
+    <string name="tools_menu_name">TOOLS</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <!-- Action bar icon names -->
+    <string name="redo_icon_name">Redo</string>
+    <string name="undo_icon_name">Undo</string>
+</resources>
