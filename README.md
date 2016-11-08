@@ -35,3 +35,14 @@ __Options Menu:__ An options menu in the Action Bar next to the undo and redo bu
 
 
  ![ScreenShot_DeleteAll](screenshots/ScreenShot_DeleteAll.png)
+
+  __Online sources used in this app:__
+
+- slide out tools menu adapted from Navigation Drawer tutorial on
+- http://blog.teamtreehouse.com/add-navigation-drawer-android
+
+- currently selected color shown as was adapted from
+- https://code.tutsplus.com/tutorials/android-sdk-create-a-drawing-app-touch-interaction--mobile-19202
+
+- save image to gallery from tutorial:
+- https://code.tutsplus.com/tutorials/android-sdk-create-a-drawing-app-essential-functionality--mobile-19328
