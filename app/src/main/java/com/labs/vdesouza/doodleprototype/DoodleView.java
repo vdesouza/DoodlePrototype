@@ -9,12 +9,15 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class DoodleView extends View {
 
@@ -34,17 +37,51 @@ public class DoodleView extends View {
         init(attrs, defStyle);
     }
 
-    //drawing path
-    private Path mPath;
+    // Object that holds current paint and path set to the last color picked
+    class PaintPath {
+        //defines how to draw
+        private Paint mPaint;
+        //drawing path
+        private Path mPath;
 
+        public  PaintPath() {
+            mPath = new Path();
+            mPaint = new Paint();
+            mPaint.setColor(currentPaintColor );
+            mPaint.setAlpha(currentPaintAlpha);
+            mPaint.setAntiAlias(true);
+            mPaint.setStrokeWidth(currentBrushSize);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setStrokeJoin(Paint.Join.ROUND);
+            mPaint.setStrokeCap(Paint.Cap.ROUND);
+        }
 
-    //defines how to draw
-    private Paint drawPaint;
+        public PaintPath(Paint paint, Path path, int color, float brushSize, int alpha) {
+            mPaint = paint;
+            mPath = path;
+            mPaint.setColor(color);
+            mPaint.setAntiAlias(true);
+            mPaint.setAlpha(alpha);
+            mPaint.setStrokeWidth(brushSize);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setStrokeJoin(Paint.Join.ROUND);
+            mPaint.setStrokeCap(Paint.Cap.ROUND);
+        }
 
-    //initial color
-    private int paintColor = 0xFF660000;
+        public Paint getPaint() {
+            return mPaint;
+        }
 
+        public Path getPath() {
+            return mPath;
+        }
+    }
 
+    //current color
+    private int currentPaintColor = Color.parseColor("#212121");
+
+    //current alpha
+    private int currentPaintAlpha = 255;
 
     //canvas - holding pen, holds your drawings
     //and transfers them to the view
@@ -56,32 +93,28 @@ public class DoodleView extends View {
     //brush size
     private float currentBrushSize, lastBrushSize;
 
-    private ArrayList<Path> paths = new ArrayList<Path>();
-    private ArrayList<Path> undonePaths = new ArrayList<Path>();
+    private List<PaintPath> paths = new ArrayList<PaintPath>();
+    private List<PaintPath> undoPaths = new ArrayList<PaintPath>();
     private float mX, mY;
     private static final float TOUCH_TOLERANCE = 4;
+
+    public PaintPath currentPaintPath;
 
     private void init(AttributeSet attrs, int defStyle) {
         currentBrushSize = 30;
         lastBrushSize = currentBrushSize;
+        currentPaintPath = new PaintPath();
+        paths.add(currentPaintPath);
 
-        mPath = new Path();
-        drawPaint = new Paint();
-        drawPaint.setColor(paintColor);
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(currentBrushSize);
-        drawPaint.setStyle(Paint.Style.STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        for (Path p : paths) {
-            canvas.drawPath(p, drawPaint);
+        for (PaintPath p : paths) {
+            canvas.drawPath(p.getPath(), p.getPaint());
         }
-        canvas.drawPath(mPath, drawPaint);
+        canvas.drawPath(currentPaintPath.getPath(), currentPaintPath.getPaint());
     }
 
     @Override
@@ -94,6 +127,7 @@ public class DoodleView extends View {
 
         //apply bitmap to graphic to start drawing.
         drawCanvas = new Canvas(canvasBitmap);
+        drawCanvas.drawColor(Color.WHITE);
     }
 
     @Override
@@ -103,7 +137,7 @@ public class DoodleView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                touch_start(touchX, touchY);
+                touch_down(touchX, touchY);
                 invalidate();
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -121,19 +155,19 @@ public class DoodleView extends View {
     }
 
 
-    private void touch_start(float x, float y) {
-        undonePaths.clear();
-        mPath.reset();
-        mPath.moveTo(x, y);
+    private void touch_down(float x, float y) {
+        undoPaths.clear();
+        currentPaintPath.getPath().reset();
+        currentPaintPath.getPath().moveTo(x, y);
         mX = x;
         mY = y;
     }
 
     private void touch_up() {
-        mPath.lineTo(mX, mY);
-        drawCanvas.drawPath(mPath, drawPaint);
-        paths.add(mPath);
-        mPath = new Path();
+        currentPaintPath.getPath().lineTo(mX, mY);
+        drawCanvas.drawPath(currentPaintPath.getPath(), currentPaintPath.getPaint());
+        paths.add(currentPaintPath);
+        currentPaintPath = new PaintPath();
 
     }
 
@@ -141,7 +175,7 @@ public class DoodleView extends View {
         float dx = Math.abs(x - mX);
         float dy = Math.abs(y - mY);
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-            mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
+            currentPaintPath.getPath().quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
             mX = x;
             mY = y;
         }
@@ -150,18 +184,58 @@ public class DoodleView extends View {
 
     public void onClickUndo() {
         if (paths.size() > 0) {
-            undonePaths.add(paths.remove(paths.size() - 1));
+            undoPaths.add(paths.remove(paths.size() - 1));
             invalidate();
         }
-
     }
 
     public void onClickRedo() {
-        if (undonePaths.size() > 0) {
-            paths.add(undonePaths.remove(undonePaths.size() - 1));
+        if (undoPaths.size() > 0) {
+            paths.add(undoPaths.remove(undoPaths.size() - 1));
             invalidate();
         }
-
     }
 
+    public void onClickClearAll() {
+        if (paths.size() > 0) {
+            undoPaths.addAll(paths);
+            invalidate();
+        }
+        paths.removeAll(paths);
+        invalidate();
+    }
+
+    public int getCurrentBrushSize() {
+        return (int) currentPaintPath.getPaint().getStrokeWidth();
+    }
+    public int getCurrentColor() {
+        return currentPaintPath.getPaint().getColor();
+    }
+    public int getCurrentAlpha() {
+        return currentPaintPath.getPaint().getAlpha();
+    }
+
+    public void setPaintColor(int color) {
+        invalidate();
+        currentPaintColor = color;
+        currentPaintPath = new PaintPath(currentPaintPath.getPaint(), currentPaintPath.getPath(),
+                currentPaintColor, currentBrushSize, currentPaintAlpha );
+    }
+
+    public void setBrushSize(float newSize) {
+        invalidate();
+        if (newSize == 0) {
+            newSize = (float) 1.0;
+        }
+        currentBrushSize = newSize;
+        currentPaintPath = new PaintPath(currentPaintPath.getPaint(), currentPaintPath.getPath(),
+                currentPaintColor, currentBrushSize, currentPaintAlpha);
+    }
+
+    public void setBrushOpacity(int alpha) {
+        invalidate();
+        currentPaintAlpha = alpha;
+        currentPaintPath = new PaintPath(currentPaintPath.getPaint(), currentPaintPath.getPath(),
+                currentPaintColor, currentBrushSize, currentPaintAlpha );
+    }
 }

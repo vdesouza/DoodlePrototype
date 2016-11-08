@@ -14,5 +14,4 @@
           android:title="@string/redo_icon_name"
           appNs:showAsAction="ifRoom"/>
 
-
 </menu>
