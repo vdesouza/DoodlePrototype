@@ -232,6 +232,10 @@ public class MainActivity extends AppCompatActivity {
                         mBrushPreviewImageView.requestLayout();
                         mDoodleView.setPaintColor(mDoodleView.getDrawingCacheBackgroundColor());
                         mDoodleView.setBrushOpacity(255);
+                        // highlight the currently selected color
+                        currPaintRow = (LinearLayout) mColorGrid.getChildAt(0);
+                        currPaint = (ImageButton) currPaintRow.getChildAt(3);
+                        currPaint.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.paint_pressed, null));
                         break;
                     case 2:
                         // set tools visible
